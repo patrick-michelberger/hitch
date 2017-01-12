@@ -1,0 +1,22 @@
+{
+  "name": "alexa-skill-hitch",
+  "version": "1.0.0",
+  "description": "Alexa skill to demonstrate account linking.",
+  "main": "index.js",
+  "scripts": {
+    "deploy:init": "serverless deploy",
+    "deploy": "serverless deploy function --function alexaSkill",
+    "logs:tail": "serverless logs --tail --function alexaSkill"
+  },
+  "keywords": [
+    "alexa",
+    "amazon",
+    "echo",
+    "account linking"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "alexa-sdk": "^1.0.6",
+    "serverless": "^1.4.0"
+  }
+}
