@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Hitch</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <style>
+      .panel {
+        margin-top: 20px;
+        border-radius: 0;
+				display: none;
+			}
+      .btn,
+      .form-control {
+        height: 45px;
+        border-radius: 0;
+      }
+
+      .alert {
+        border-radius: 0;
+      }
+    </style>
+  </head>
+	<body>
+		<div class="container">
+			<div id="root">
+
+				<!-- Login Form -->
+        <div id="loginFormContainer" class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Connect with Hitch</h3>
+          </div>
+          <div class="panel-body">
+            <form>
+              <div class="form-group">
+                <label for="exampleInputEmail1">Email address</label>
+                <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email" disabled>
+              </div>
+              <div class="form-group">
+                <label for="exampleInputPassword1">Password</label>
+                <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" disabled>
+              </div>
+              <button id="loginBtnCustom" type="submit" class="btn btn-block btn-default" disabled>Login</button>
+
+            </form>
+            <hr/>
+            <button id="loginBtnGoogle" class="btn btn-block btn-danger">Login with Google</button>
+            <button id="loginBtnFacebook" class="btn btn-block btn-primary" disabled>Login with Facebook</button>
+          </div>
+					<div id="error">
+					</div>
+        </div>
+
+				<!-- Home -->
+				<div id="homeContainer" class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Welcome to Hitch, <span class="username"></span>.</h3>
+					</div>
+					<div class="panel-body">
+						<button id="authcodeBtn" class="btn btn-block btn-primary">Generate Alexa Authcode</button>
+						<button id="loadingIndicator" class="btn btn-block btn-default loadingIndicator" disabled>Generating ...</button>
+						<button id="authcode" class="btn btn-block btn-default" disabled></button>
+						<hr/>
+						<button id="logoutBtn" class="btn btn-block btn-default">Logout</button>
+					</div>
+				</div>
+
+				<!-- Authorization Page -->
+				<div id="authorizationContainer" class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Hitch Authorization Page.</h3>
+					</div>
+					<div class="panel-body">
+						<p>
+							Sign into the Hitch website and request an Authorization Code.
+							Then enter it below and then press <b>Authorize Alexa</b>.
+						</p>
+						<input id="authcodeInput" type="text" class="form-control" placeholder="Authcode">
+						<button id="authorizeAlexaBtn" class="btn btn-block btn-primary">Authorize Alexa</button>
+					</div>
+				</div>
+      </div>
+		</div>
+	</body>
+  <script src="https://www.gstatic.com/firebasejs/3.6.5/firebase.js"></script>
+  <script>
+
+		/**
+		 *  UI Elements
+		 */
+    const $loginBtnGoogle = $('#loginBtnGoogle');
+		const $logoutBtn = $('#logoutBtn');
+		const $loadingIndicator = $('#loadingIndicator');
+		const $authcodeBtn = $('#authcodeBtn');
+		const $authcode = $('#authcode');
+		const $loginFormContainer = $('#loginFormContainer');
+		const $authorizationContainer = $('#authorizationContainer');
+		const $authorizeAlexaBtn = $('#authorizeAlexaBtn');
+		const $homeContainer = $('#homeContainer');
+    const $errorMessage = $("#error");
+		const $authcodeInput = $("#authcodeInput");
+
+		/**
+		 *  Actions
+		 */
+    const signup = () => {
+      let provider = new firebase.auth.FacebookAuthProvider();
+      auth.signInWithRedirect(provider).catch(handleError);
+    };
+
+		const signout = () => {
+			auth.signOut();
+		};
+
+		const sendAlexaToken = () => {
+			return auth.currentUser.getToken(true).then(token => {
+          const l = window.location;
+          const url = `https://47sxy4sg95.execute-api.eu-west-1.amazonaws.com/prod/authorize/token?token=${token}`
+          return $.get(url);
+			}).catch(handleError);
+		};
+
+		/**
+		 *  Event Handlers
+		 */
+    $loginBtnGoogle.click(signup);
+
+		$logoutBtn.click(signout);
+
+		$authcodeBtn.click((event) => {
+			event.preventDefault();
+			$authcodeBtn.hide();
+			$loadingIndicator.show();
+			sendAlexaToken().then((code) => {
+				$authcode.text(code);
+				$authcodeBtn.show();
+				$loadingIndicator.hide();
+				$authcode.show();
+				$authorizationContainer.show();
+			});
+		});
+
+		$authorizeAlexaBtn.click((event) => {
+			event.preventDefault();
+
+			const code = $authcodeInput.val();
+			const client_id = getUrlParameter('client_id');
+			const response_type = getUrlParameter('response_type');
+			const state = getUrlParameter('state');
+
+			if (code) {
+					window.location = `/prod/authorize/commit-code?client_id=${client_id}&response_type=${response_type}&state=${state}&code=${code}`;
+			} else {
+					firebase.auth().currentUser.getToken(true).then(token => {
+							window.location = `/prod/authorize/commit?token=${token}&client_id=${client_id}&response_type=${response_type}&state=${state}`;
+					}).catch(error => {
+							alert(`something went wrong: ${error.message}`)
+					});
+			}
+		});
+
+		/**
+		 *  Initialization
+		 */
+		$loadingIndicator.hide();
+		$authorizationContainer.hide();
+
+		// Initialize Firebase
+		const config = {
+			apiKey: "AIzaSyC9efLolX0JRCwQomSBH3hXE1IoScWA_l4",
+			authDomain: "hitch-d9986.firebaseapp.com",
+			databaseURL: "https://hitch-d9986.firebaseio.com",
+			storageBucket: "hitch-d9986.appspot.com",
+			messagingSenderId: "469754388979"
+		};
+
+		firebase.initializeApp(config);
+		const auth = firebase.auth();
+		const db = firebase.database();
+
+		auth.onAuthStateChanged((authData) => {
+			if (authData) {
+				$loginFormContainer.hide();
+				$homeContainer.show();
+				$homeContainer.find('.username').text(authData.displayName);
+			} else {
+				$loginFormContainer.show();
+				$homeContainer.hide();
+
+			}
+		});
+
+		/**
+		 *  Helpers
+		 */
+		const getUrlParameter = (sParam) => {
+		    let sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		};
+
+		const handleError = (error) => {
+			if (error && error.message) {
+				$errorMessage.text(`Error: ${error.message}`);
+			}
+		};
+  </script>
+</html>

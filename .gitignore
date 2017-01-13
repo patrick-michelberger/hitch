@@ -96,3 +96,7 @@ jspm_packages
 
 ## Custom
 .serverless
+
+## Configuration files
+src/firebase-admin.json
+src/config.json

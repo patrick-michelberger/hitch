@@ -10,7 +10,23 @@ provider:
 
 functions:
   alexaSkill:
-    handler: index.handler
+    handler: skill.handler
     description: Alexa skill to demonstrate account linking
     events:
       - alexaSkill
+  index:
+    handler: auth.showLoginPage
+    events:
+      - http: GET login
+  authorizeToken:
+    handler: auth.authorizeToken
+    events:
+      - http: GET authorize/token
+  authorizeByLogin:
+    handler: auth.authorizeByLogin
+    events:
+      - http: GET authorize/commit
+  authorizeByCode:
+    handler: auth.authorizeByCode
+    events:
+      - http: GET authorize/commit-code

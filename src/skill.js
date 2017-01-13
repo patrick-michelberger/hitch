@@ -1,5 +1,8 @@
 'use strict';
 
+/**
+ *  Dependencies
+ */
 const Alexa = require('alexa-sdk');
 
 const speechOutput = {
@@ -10,6 +13,9 @@ const speechOutput = {
     "STOP_MESSAGE": "See you!"
 };
 
+/**
+ *  Main
+ */
 exports.handler = (event, context, callback) => {
     const alexa = Alexa.handler(event, context);
     alexa.appId = 'amzn1.ask.skill.fa292120-c0ab-439d-9b61-60bea0b14abd';
@@ -22,7 +28,10 @@ const handlers = {
         this.emit(':ask', speechOutput.WELCOME_MESSAGE);
     },
     'SendMessageIntent' (events) {
-      this.response.speak("Message sent.");
-      this.emit(':responseReady');
+        this.emit(':tellWithLinkAccountCard', "You must have a hitch account to use this skill. Please use the Alexa desktop website to link your Amazon account with your Hitch Account.");
+    },
+    'AMAZON.HelpIntent': () {
+        this.response.speak(speechOutput.HELP_MESSAGE);
+        this.emit(':responseReady');
     }
 };
