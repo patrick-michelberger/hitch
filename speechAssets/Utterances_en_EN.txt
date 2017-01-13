@@ -1,0 +1,1 @@
+SendMessageIntent send message to {friend}

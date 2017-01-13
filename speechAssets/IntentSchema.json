@@ -1,6 +1,15 @@
 {
   "intents": [
     {
+      "intent": "SendMessageIntent",
+      "slots": [
+        {
+          "name": "friend",
+          "type": "LIST_OF_FRIENDS"
+        }
+      ]
+    },
+    {
       "intent": "AMAZON.HelpIntent"
     }
   ]
